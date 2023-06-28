@@ -33,8 +33,18 @@ public class txt {
                 boolean error = false;
                 String key = "";
                 String value = "";
+                boolean comment = false;
                 for(int index = 0; index < line.length(); ++index){
                     char ch = line.toCharArray()[index];
+                    if(ch == '#' && !comment && !inString){
+                        comment = true;
+                        continue;
+                    }else if(ch == '#' && comment && !inString){
+                        comment = false;
+                        continue;
+                    }else if(comment){
+                        continue;
+                    }
                     if(ch == '\"' && !inString){
                         inString = true;
                         continue;
@@ -43,6 +53,7 @@ public class txt {
                         inString = false;
                         continue;
                     }
+
                     if(inString && beforeColons){
                         System.out.println("Invalid syntax found in line "+currentLine+" [character sequence written before colons] (method: open(), io.unfish.txt)" +
                                 "\nIgnore this line");
@@ -85,7 +96,7 @@ public class txt {
                     map1.put(path + key, currentLine);
                     continue;
                 }
-                if(LIST)list.add(key);
+                if(LIST && !key.isBlank())list.add(key);
                 map3.put(currentLine,key);
             }
             scanner.close();

@@ -27,5 +27,7 @@ public class test {
         }
         t.set("server#note2#port","25565",null,true);
          */
+        t.open();
+        System.out.println(t.map.get("server#"));
     }
 }

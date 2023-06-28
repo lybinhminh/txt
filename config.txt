@@ -21,5 +21,9 @@ port: 25565
 ip: localhost
 desc: minecraft server
 }
+hi
+bonjour
+#this is a comment
+# another comment#
 }
 ip: localhost
