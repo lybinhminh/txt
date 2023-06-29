@@ -12,6 +12,7 @@ public class txt {
     public Map<Integer,String>map0 = new HashMap<>(); // store original lines in txt file <line number ?>: line
     public Map<Integer,String>map3 = new HashMap<>(); //  store list of an element of list
     public List<Integer>comments  = new ArrayList<>();
+    public Map<String,String>map4 = new HashMap<>(); // store getAnyList return with take = 2 for a list
     public boolean update = true;
     public txt(File file){
      this.file = file;
@@ -83,7 +84,13 @@ public class txt {
                         map.put(path,list.toString());
                         list.clear();
                     }
-
+                    map4.put(path,getAnyList(map1.get(path),currentLine,2,false));
+                    if(map.get(path) == null){
+                        map.put(path,map4.get(path));
+                    }
+                    else{
+                        map.put(path,map.get(path)+"#"+map4.get(path));
+                    }
                     --currentBlock;
                     continue;
                 }
@@ -106,47 +113,56 @@ public class txt {
         }
     }
     public void set(String path,String newValue,List<String> newList,boolean createNew){
-        if(map.get(path) != null){
+        if(map.get(path) != null || map1.get(path) != null){
                 try{
-
                     if(map2.get(path) != null){
                         if(newList == null){
                             newList = new ArrayList<>();
                             if(newValue.contains(",")){
                                 for(String temporary: newValue.split(",")){
-                                    newList.add(temporary);
+                                    newList.add(temporary.trim());
                                 }
                             }else{
-                                newList.add(newValue);
+                                newList.add(newValue.trim());
                             }
 
                         }
-                        List<Integer>temporary = new ArrayList<>();
-                        for(Map.Entry<Integer,String>entry: map3.entrySet()){
-                            if(entry.getKey() > map1.get(path) && entry.getKey() < map2.get(path)){
-
-                                temporary.add(entry.getKey());
-                            }
+                        List<Integer> field = new ArrayList<>(); // store index of list element in the list pointed to by the path
+                        for(int index = map1.get(path) + 1; index < map2.get(path); ++index){
+                            field.add(index);
                         }
                         List<String>ls = new ArrayList<>();
                         boolean enough = true;
-                        if(temporary.size() < newList.size()){
+                        if (field.size() < newList.size()){ // number of the old list elements is smaller than the number of new list's elements
                             enough = false;
                         }
-                        int i = 0;
-                        for(Map.Entry<Integer,String>entry: map0.entrySet()){
-                            if(i < temporary.size())
-                            if(entry.getKey() == temporary.get(i)){
-                                if(i < newList.size())
-                                ls.add(newList.get(i));
-                                ++i;
-                                continue;
-                            }
-                            if((i == temporary.size()) && !enough){
-                                for(; i < newList.size(); ++i){
-                                    ls.add(newList.get(i));
+                        boolean hasEmptySpace = true;
+                        if(map2.get(path)-map1.get(path) < 2)
+                        {
+                            hasEmptySpace = false;
+                            field.add(map2.get(path));
+                        }
+
+                        int lineChanged = 0; // count the number of the old list's element changed
+                        for(Map.Entry<Integer,String>entry: map0.entrySet()) {
+                            if (lineChanged < field.size())
+                                if (entry.getKey() == field.get(lineChanged)) {
+                                    if (lineChanged < newList.size())
+                                        ls.add(newList.get(lineChanged));
+                                    ++lineChanged;
+                                    continue;
+                                }
+                            if ((lineChanged == field.size()) && !enough) {
+                                for (; lineChanged < newList.size(); ++lineChanged) {
+                                    ls.add(newList.get(lineChanged));
                                 }
                             }
+                            if (!hasEmptySpace){
+                            if (lineChanged == newList.size()){
+                                ls.add(map0.get(map2.get(path)));
+                                ++lineChanged;
+                            }
+                        }
                             ls.add(entry.getValue());
                         }
                         PrintWriter out = new PrintWriter(file);
@@ -156,8 +172,9 @@ public class txt {
                         }
                         out.close();
                         return;
+                    }else {
+                        map0.replace(map1.get(path), map0.get(map1.get(path)).split(":")[0] + ": " + newValue);
                     }
-                    map0.replace(map1.get(path),map0.get(map1.get(path)).split(":")[0]+": "+newValue);
                     PrintWriter out = new PrintWriter(file);
                     for(Map.Entry<Integer,String>entry : map0.entrySet()){
                         out.println(entry.getValue());
@@ -172,46 +189,6 @@ public class txt {
         if(createNew){
             String[] temporary = path.split("#");
             List<String>ls = new ArrayList<>();
-            /*
-            if(temporary.length == 1){
-                for(Map.Entry<Integer,String>entry : map0.entrySet()){
-                    ls.add(entry.getValue());
-                }
-
-                if(!path.contains("#")){
-                    ls.add(path+": "+newValue);
-                }
-                else{
-                    if(newList == null){
-                        newList=  new ArrayList<>();
-                        if(newValue.contains(",")){
-                            for(String temporary1 : newValue.split(",")){
-                                newList.add(temporary1);
-                            }
-                        }else{
-                            newList.add(newValue);
-                        }
-                    }
-                    ls.add(path+": {");
-                    for(String str: newList){
-                        ls.add(str);
-                    }
-                    ls.add("}");
-                }
-                try{
-                    PrintWriter out = new PrintWriter(file);
-                    for(String l: ls){
-                        out.println(l);
-                        out.flush();
-                    }
-                    out.close();
-                    return;
-                }catch(Exception e){
-
-                }
-            }
-
-            */
             String PATH = "";
             String lastElement = temporary[temporary.length - 1];
 
@@ -320,14 +297,14 @@ public class txt {
          * take = 1 : only take line with blank value ( element of a list); take = 2 : only take <key>: value; take = other numbers : take all
          */
         List<String> result = new ArrayList<>();
-        for(int index = startIndex + 1; index > endIndex; ++index){
+        for(int index = startIndex + 1; index < endIndex; ++index){
             if(comments.contains(index) &&  !includeComment)continue;
             else if(comments.contains(index)){
                 result.add(map0.get(index));
                 continue;
             }
             if(take == 1 && map0.get(index).split(":").length > 1)continue;
-            else if(take == 1){
+            else if(take == 1 && map3.get(index) != null){
                 result.add(map0.get(index));
                 continue;
             }
@@ -336,6 +313,7 @@ public class txt {
                 result.add(map0.get(index));
                 continue;
             }
+            if(take > 2)
             result.add(map0.get(index));
         }
         return result.toString();

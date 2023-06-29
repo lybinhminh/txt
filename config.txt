@@ -7,23 +7,14 @@ japanese
 }
 }
 note1:{
-port: 25
+port: 80
 ip: localhost
 desc: web server
-languages:{
-vietnamese
-spanish
-american
+languages: {
+America: English
+Asia: Vietnamese. Chinese
+Europe: English .Spanish. French
+english
 }
 }
-note2:{
-port: 25565
-ip: localhost
-desc: minecraft server
 }
-hi
-bonjour
-#this is a comment
-# another comment#
-}
-ip: localhost

@@ -28,6 +28,7 @@ public class test {
         t.set("server#note2#port","25565",null,true);
          */
         t.open();
-        System.out.println(t.map.get("server#"));
+        System.out.println(t.map.get("server#note1#languages#"));
+        //t.set("server#note1#languages#","America: English, Asia: Vietnamese. Chinese, Europe: English .Spanish. French",null,false);
     }
 }
