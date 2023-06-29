@@ -1,20 +1,18 @@
 package io.unfish;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 public class txt {
     public File file;
-    public Map<String,String>map = new HashMap<>();
-    public Map<String,Integer>map1 = new HashMap<>();
-    public Map<String,Integer>map2 = new HashMap<>();
-    public Map<Integer,String>map0 = new HashMap<>();
-    public Map<Integer,String>map3 = new HashMap<>();
+    public Map<String,String>map = new HashMap<>(); // store data <path>: value [line, list]
+    public Map<String,Integer>map1 = new HashMap<>(); // store start index of a list <path to list always end by #>: value
+    public Map<String,Integer>map2 = new HashMap<>(); // opposite to the upper one, store end index of a list
+    public Map<Integer,String>map0 = new HashMap<>(); // store original lines in txt file <line number ?>: line
+    public Map<Integer,String>map3 = new HashMap<>(); //  store list of an element of list
+    public List<Integer>comments  = new ArrayList<>();
     public boolean update = true;
-    public Map<Integer,Boolean>map4 = new HashMap<>();
     public txt(File file){
      this.file = file;
     }
@@ -71,6 +69,10 @@ public class txt {
                 if(error)continue;
                 key = key.trim();
                 value = value.trim();
+                if(key.isBlank()){
+                    comments.add(currentLine);
+                    continue;
+                }
                 String path = "";
                 for(int i = 0; i <= currentBlock; ++i){
                     path += block[i] + "#";
@@ -300,5 +302,42 @@ public class txt {
 
         };
         t.start();
+    }
+    public String getAnyList(int startIndex,int endIndex,int take, boolean includeComment){
+        if(startIndex < 1){
+            System.out.println("Invalid startIndex input in method getAnyList(int,int,int,boolean) in io.unfish.txt [startIndex < 1]");
+            return null;
+        }else if(startIndex > endIndex){
+            int temp = startIndex;
+            startIndex = endIndex;
+            endIndex=  temp;
+        }else if(endIndex - startIndex == 0){
+            System.out.println("Invalid startIndex and endIndex input in method getAnyList(int,int,int.boolean) in io.unfish.txt[startIndex = endIndex]");
+            return null;
+        }
+        /**
+         * put all line from startIndex + 1 to endIndex - 1 into a list then make it turned into a char sequence
+         * take = 1 : only take line with blank value ( element of a list); take = 2 : only take <key>: value; take = other numbers : take all
+         */
+        List<String> result = new ArrayList<>();
+        for(int index = startIndex + 1; index > endIndex; ++index){
+            if(comments.contains(index) &&  !includeComment)continue;
+            else if(comments.contains(index)){
+                result.add(map0.get(index));
+                continue;
+            }
+            if(take == 1 && map0.get(index).split(":").length > 1)continue;
+            else if(take == 1){
+                result.add(map0.get(index));
+                continue;
+            }
+            if(take == 2 && map0.get(index).split(":").length < 2)continue;
+            else if(take == 2){
+                result.add(map0.get(index));
+                continue;
+            }
+            result.add(map0.get(index));
+        }
+        return result.toString();
     }
 }
